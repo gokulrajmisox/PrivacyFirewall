@@ -32,6 +32,14 @@ class RegexDetectorTest {
     }
 
     @Test
+    fun testDetectApiKey() {
+        val results = detector.detect("Here is my key: sk-live-1234567890abcdef1234")
+        assertEquals(1, results.size)
+        assertEquals(RegexDetector.ThreatType.API_KEY, results[0].threatType)
+        assertEquals("sk-live-1234567890abcdef1234", results[0].matchedText)
+    }
+
+    @Test
     fun testMultipleThreats() {
         val results = detector.detect("Contact test@test.com or call 555-123-4567")
         assertEquals(2, results.size)

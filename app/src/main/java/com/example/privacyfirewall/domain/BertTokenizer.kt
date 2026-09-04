@@ -4,6 +4,19 @@ import android.content.Context
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
+data class TokenSpan(
+    val token: String,
+    val id: Long,
+    val start: Int,
+    val end: Int
+)
+
+data class TokenizationResult(
+    val inputIds: LongArray,
+    val attentionMask: LongArray,
+    val tokens: List<TokenSpan>
+)
+
 class BertTokenizer(context: Context) {
     private val vocab = mutableMapOf<String, Long>()
     private val invVocab = mutableMapOf<Long, String>()
@@ -28,68 +41,70 @@ class BertTokenizer(context: Context) {
         }
     }
 
+    private data class WordSpan(val word: String, val start: Int, val end: Int)
+
     fun tokenize(text: String): TokenizationResult {
-        // Lowercase for uncased BERT
-        val cleanText = text.lowercase()
-        
-        // Very basic word splitting (splits by space and punctuation)
-        // For a true BERT tokenizer we would split by all punctuation keeping the punctuation as separate tokens.
-        val tokens = mutableListOf<String>()
-        val currentWord = StringBuilder()
-        
-        for (char in cleanText) {
-            if (char.isWhitespace()) {
-                if (currentWord.isNotEmpty()) {
-                    tokens.add(currentWord.toString())
-                    currentWord.clear()
-                }
-            } else if (isPunctuation(char)) {
-                if (currentWord.isNotEmpty()) {
-                    tokens.add(currentWord.toString())
-                    currentWord.clear()
-                }
-                tokens.add(char.toString())
+        if (text.isEmpty()) {
+            return TokenizationResult(
+                longArrayOf(clsTokenId, sepTokenId),
+                longArrayOf(1L, 1L),
+                listOf(
+                    TokenSpan("[CLS]", clsTokenId, 0, 0),
+                    TokenSpan("[SEP]", sepTokenId, 0, 0)
+                )
+            )
+        }
+
+        // Split into basic words with real character offsets in the original text
+        val words = mutableListOf<WordSpan>()
+        var i = 0
+        while (i < text.length) {
+            val c = text[i]
+            if (c.isWhitespace()) {
+                i++
+            } else if (isPunctuation(c)) {
+                words.add(WordSpan(c.toString().lowercase(), i, i + 1))
+                i++
             } else {
-                currentWord.append(char)
+                val start = i
+                while (i < text.length && !text[i].isWhitespace() && !isPunctuation(text[i])) {
+                    i++
+                }
+                val word = text.substring(start, i).lowercase()
+                words.add(WordSpan(word, start, i))
             }
         }
-        if (currentWord.isNotEmpty()) {
-            tokens.add(currentWord.toString())
+
+        val tokenSpans = mutableListOf<TokenSpan>()
+        
+        // Add [CLS]
+        tokenSpans.add(TokenSpan("[CLS]", clsTokenId, 0, 0))
+
+        // WordPiece tokenize each word and preserve exact character offsets
+        for (w in words) {
+            val subTokens = wordPieceTokenize(w.word, w.start, w.end)
+            tokenSpans.addAll(subTokens)
         }
 
-        val tokenIds = mutableListOf<Long>()
-        val originalWords = mutableListOf<String>()
-        
-        tokenIds.add(clsTokenId)
-        originalWords.add("[CLS]")
-        
-        for (token in tokens) {
-            val subTokens = wordPieceTokenize(token)
-            for (subToken in subTokens) {
-                tokenIds.add(vocab[subToken] ?: unkTokenId)
-                originalWords.add(subToken)
-            }
-        }
-        
-        tokenIds.add(sepTokenId)
-        originalWords.add("[SEP]")
+        // Add [SEP]
+        tokenSpans.add(TokenSpan("[SEP]", sepTokenId, text.length, text.length))
 
-        // Attention mask is 1 for all real tokens
+        val tokenIds = tokenSpans.map { it.id }.toLongArray()
         val attentionMask = LongArray(tokenIds.size) { 1L }
 
-        return TokenizationResult(tokenIds.toLongArray(), attentionMask, originalWords)
+        return TokenizationResult(tokenIds, attentionMask, tokenSpans)
     }
 
-    private fun wordPieceTokenize(word: String): List<String> {
-        val outputTokens = mutableListOf<String>()
+    private fun wordPieceTokenize(word: String, wordStart: Int, wordEnd: Int): List<TokenSpan> {
+        val output = mutableListOf<TokenSpan>()
         var isBad = false
         var start = 0
-        
+
         while (start < word.length) {
             var end = word.length
             var curStr = ""
             var found = false
-            
+
             while (start < end) {
                 val subStr = if (start == 0) word.substring(start, end) else "##" + word.substring(start, end)
                 if (vocab.containsKey(subStr)) {
@@ -99,19 +114,24 @@ class BertTokenizer(context: Context) {
                 }
                 end--
             }
-            
+
             if (!found) {
                 isBad = true
                 break
             }
-            outputTokens.add(curStr)
+
+            val id = vocab[curStr] ?: unkTokenId
+            // Exact character span in the original text
+            val tokenStart = wordStart + start
+            val tokenEnd = wordStart + end
+            output.add(TokenSpan(curStr, id, tokenStart, tokenEnd))
             start = end
         }
-        
+
         if (isBad) {
-            return listOf("[UNK]")
+            return listOf(TokenSpan("[UNK]", unkTokenId, wordStart, wordEnd))
         }
-        return outputTokens
+        return output
     }
 
     private fun isPunctuation(char: Char): Boolean {
@@ -120,9 +140,3 @@ class BertTokenizer(context: Context) {
         return !char.isLetterOrDigit() && !char.isWhitespace()
     }
 }
-
-data class TokenizationResult(
-    val inputIds: LongArray,
-    val attentionMask: LongArray,
-    val tokens: List<String>
-)

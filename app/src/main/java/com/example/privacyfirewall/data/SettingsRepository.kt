@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
@@ -22,6 +23,7 @@ class SettingsRepository(private val context: Context) {
     companion object {
         val IS_PROTECTION_ENABLED = booleanPreferencesKey("is_protection_enabled")
         val PROTECTED_APPS = stringSetPreferencesKey("protected_apps")
+        val THREATS_BLOCKED = intPreferencesKey("threats_blocked")
         
         // Default protected apps
         val DEFAULT_PROTECTED_APPS = setOf(
@@ -56,6 +58,27 @@ class SettingsRepository(private val context: Context) {
     suspend fun setProtectedApps(apps: Set<String>) {
         dataStore.edit { preferences ->
             preferences[PROTECTED_APPS] = apps
+        }
+    }
+
+    val threatsBlockedCount: Flow<Int> = dataStore.data
+        .catch { exception ->
+            if (exception is IOException) emit(emptyPreferences()) else throw exception
+        }
+        .map { preferences ->
+            preferences[THREATS_BLOCKED] ?: 0
+        }
+
+    suspend fun incrementThreatsBlocked(count: Int = 1) {
+        dataStore.edit { preferences ->
+            val current = preferences[THREATS_BLOCKED] ?: 0
+            preferences[THREATS_BLOCKED] = current + count
+        }
+    }
+
+    suspend fun resetThreatsBlocked() {
+        dataStore.edit { preferences ->
+            preferences[THREATS_BLOCKED] = 0
         }
     }
 }
