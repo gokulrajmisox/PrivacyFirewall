@@ -12,6 +12,9 @@
 [![Privacy](https://img.shields.io/badge/Privacy-100%25%20On--Device-success)](#)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
+### 📥 Download Demo APK
+**[Click here to download the Hackathon Demo APK](https://drive.google.com/file/d/1Amfnf3JzGKEElA3oOVwUAUe-9Yv4t4Fn/view?usp=sharing)** 
+
 ---
 
 ## 📌 Executive Summary
