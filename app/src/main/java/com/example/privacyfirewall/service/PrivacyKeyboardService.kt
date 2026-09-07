@@ -120,18 +120,23 @@ class PrivacyKeyboardService : InputMethodService(), LifecycleOwner, ViewModelSt
         detectedThreats = emptyList()
     }
 
+    private var analysisJob: Job? = null
+
     private fun checkCurrentInput() {
         // Read directly from InputConnection or fallback to local keystroke buffer
         val textBefore = currentInputConnection?.getTextBeforeCursor(1000, 0)?.toString()
         val textToAnalyze = if (!textBefore.isNullOrEmpty()) textBefore else keyboardTextState.value
 
         if (textToAnalyze.isBlank()) {
+            analysisJob?.cancel()
             warningState.value = null
             detectedThreats = emptyList()
             return
         }
 
-        serviceScope.launch {
+        analysisJob?.cancel()
+        analysisJob = serviceScope.launch {
+            kotlinx.coroutines.delay(300) // Debounce rapid keystrokes to prevent ONNX thread starvation
             val threats = firewallEngine.analyzeText(textToAnalyze)
             if (threats.isNotEmpty()) {
                 detectedThreats = threats
@@ -175,7 +180,9 @@ class PrivacyKeyboardService : InputMethodService(), LifecycleOwner, ViewModelSt
     override fun onDestroy() {
         super.onDestroy()
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+        analysisJob?.cancel()
         serviceJob.cancel()
+        firewallEngine.close()
     }
 
     override val lifecycle: Lifecycle get() = lifecycleRegistry

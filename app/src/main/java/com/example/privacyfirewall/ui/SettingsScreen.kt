@@ -2,17 +2,29 @@ package com.example.privacyfirewall.ui
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(onNavigateBack: () -> Unit) {
+    val ruleStates = remember {
+        mutableStateMapOf(
+            "Email" to true,
+            "Phone Number" to true,
+            "Credit Card" to true,
+            "API Keys" to true,
+            "Names (AI)" to true,
+            "Organizations (AI)" to true,
+            "Locations (AI)" to true
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Settings") },
+                title = { Text("Firewall Settings") },
                 navigationIcon = {
                     Button(onClick = onNavigateBack) {
                         Text("Back")
@@ -28,10 +40,10 @@ fun SettingsScreen(onNavigateBack: () -> Unit) {
                 .padding(16.dp)
         ) {
             Text("Detection Rules", style = MaterialTheme.typography.titleMedium)
+            Spacer(modifier = Modifier.height(8.dp))
             
-            val rules = listOf("Email", "Phone Number", "Credit Card", "API Keys", "Names (AI)", "Organizations (AI)", "Locations (AI)")
-            
-            rules.forEach { rule ->
+            ruleStates.keys.forEach { rule ->
+                val isChecked = ruleStates[rule] ?: true
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -39,7 +51,12 @@ fun SettingsScreen(onNavigateBack: () -> Unit) {
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(rule)
-                    Switch(checked = true, onCheckedChange = {})
+                    Switch(
+                        checked = isChecked,
+                        onCheckedChange = { newState ->
+                            ruleStates[rule] = newState
+                        }
+                    )
                 }
             }
         }

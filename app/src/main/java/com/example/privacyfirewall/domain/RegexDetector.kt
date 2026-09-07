@@ -37,9 +37,7 @@ class RegexDetector {
         
         patterns.forEach { (type, regex) ->
             regex.findAll(text).forEach { matchResult ->
-                val g1 = if (matchResult.groups.size > 1) matchResult.groups[1] else null
-                val g2 = if (matchResult.groups.size > 2) matchResult.groups[2] else null
-                val matchedGroup = g1 ?: g2
+                val matchedGroup = matchResult.groups.drop(1).firstOrNull { it != null }
 
                 val (matchedStr, start, end) = if (matchedGroup != null) {
                     Triple(matchedGroup.value, matchedGroup.range.first, matchedGroup.range.last + 1)
@@ -59,13 +57,13 @@ class RegexDetector {
         }
         
         // Deduplicate overlapping / redundant matches
-        return results.distinctBy { "${it.threatType}-${it.startIndex}-${it.endIndex}" }
-            .filter { r1 ->
-                results.none { r2 ->
-                    r2 !== r1 && r2.threatType == r1.threatType &&
-                    r2.startIndex <= r1.startIndex && r2.endIndex >= r1.endIndex &&
-                    (r2.endIndex - r2.startIndex) > (r1.endIndex - r1.startIndex)
-                }
+        val distinctResults = results.distinctBy { "${it.threatType}-${it.startIndex}-${it.endIndex}" }
+        return distinctResults.filter { r1 ->
+            distinctResults.none { r2 ->
+                r2 !== r1 && r2.threatType == r1.threatType &&
+                r2.startIndex <= r1.startIndex && r2.endIndex >= r1.endIndex &&
+                (r2.endIndex - r2.startIndex) > (r1.endIndex - r1.startIndex)
             }
+        }
     }
 }

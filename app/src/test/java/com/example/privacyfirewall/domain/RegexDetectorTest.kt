@@ -46,4 +46,40 @@ class RegexDetectorTest {
         assertTrue(results.any { it.threatType == RegexDetector.ThreatType.EMAIL })
         assertTrue(results.any { it.threatType == RegexDetector.ThreatType.PHONE })
     }
+
+    @Test
+    fun testOverlappingThreatsRedaction() {
+        val text = "Contact me test@test.com and 555-123-4567 for info."
+        val threats = detector.detect(text)
+        
+        val sorted = threats.filter { it.startIndex in 0..text.length && it.endIndex in it.startIndex..text.length }
+            .sortedWith(compareBy({ it.startIndex }, { -it.endIndex }))
+
+        val sb = StringBuilder()
+        var lastIndex = 0
+
+        for (threat in sorted) {
+            if (threat.startIndex < lastIndex) {
+                if (threat.endIndex > lastIndex) {
+                    sb.append("[REDACTED: ${threat.threatType.name}]")
+                    lastIndex = threat.endIndex
+                }
+                continue
+            }
+            if (threat.startIndex > lastIndex) {
+                sb.append(text.substring(lastIndex, threat.startIndex))
+            }
+            sb.append("[REDACTED: ${threat.threatType.name}]")
+            lastIndex = threat.endIndex
+        }
+
+        if (lastIndex < text.length) {
+            sb.append(text.substring(lastIndex))
+        }
+
+        val redacted = sb.toString()
+        assertTrue(!redacted.contains("test@test.com"))
+        assertTrue(!redacted.contains("555-123-4567"))
+        assertEquals("Contact me [REDACTED: EMAIL] and [REDACTED: PHONE] for info.", redacted)
+    }
 }

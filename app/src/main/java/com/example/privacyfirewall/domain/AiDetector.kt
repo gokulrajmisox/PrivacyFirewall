@@ -6,7 +6,7 @@ import ai.onnxruntime.OrtEnvironment
 import ai.onnxruntime.OrtSession
 import java.nio.LongBuffer
 
-class AiDetector(private val context: Context) {
+class AiDetector(context: Context) {
 
     private val ortEnv: OrtEnvironment = OrtEnvironment.getEnvironment()
     private var ortSession: OrtSession? = null
@@ -50,6 +50,11 @@ class AiDetector(private val context: Context) {
         val results = mutableListOf<RegexDetector.DetectionResult>()
         if (text.isBlank() || ortSession == null || !isModelLoaded) return results
 
+        var inputIdsTensor: OnnxTensor? = null
+        var attentionMaskTensor: OnnxTensor? = null
+        var tokenTypeIdsTensor: OnnxTensor? = null
+        var output: OrtSession.Result? = null
+
         try {
             // 1. Tokenize text with exact character spans
             val tokenizationResult = tokenizer.tokenize(text)
@@ -60,10 +65,10 @@ class AiDetector(private val context: Context) {
             if (inputIds.isEmpty()) return results
 
             // 2. Prepare tensors & Run Inference
-            val inputIdsTensor = OnnxTensor.createTensor(ortEnv, LongBuffer.wrap(inputIds), longArrayOf(1, inputIds.size.toLong()))
-            val attentionMaskTensor = OnnxTensor.createTensor(ortEnv, LongBuffer.wrap(attentionMask), longArrayOf(1, attentionMask.size.toLong()))
-            val tokenTypeIds = LongArray(inputIds.size) { 0L }
-            val tokenTypeIdsTensor = OnnxTensor.createTensor(ortEnv, LongBuffer.wrap(tokenTypeIds), longArrayOf(1, tokenTypeIds.size.toLong()))
+            inputIdsTensor = OnnxTensor.createTensor(ortEnv, LongBuffer.wrap(inputIds), longArrayOf(1, inputIds.size.toLong()))
+            attentionMaskTensor = OnnxTensor.createTensor(ortEnv, LongBuffer.wrap(attentionMask), longArrayOf(1, attentionMask.size.toLong()))
+            val tokenTypeIds = LongArray(inputIds.size)
+            tokenTypeIdsTensor = OnnxTensor.createTensor(ortEnv, LongBuffer.wrap(tokenTypeIds), longArrayOf(1, tokenTypeIds.size.toLong()))
 
             val inputs = mapOf(
                 "input_ids" to inputIdsTensor,
@@ -71,7 +76,7 @@ class AiDetector(private val context: Context) {
                 "token_type_ids" to tokenTypeIdsTensor
             )
 
-            val output = ortSession?.run(inputs)
+            output = ortSession?.run(inputs)
             val logits = output?.get(0)?.value as? Array<Array<FloatArray>> ?: return results
             val sequenceLogits = logits[0]
 
@@ -102,17 +107,17 @@ class AiDetector(private val context: Context) {
                 nerTokens.add(NerToken(label, tokenSpan.token, probability, tokenSpan.start, tokenSpan.end))
             }
 
-            inputIdsTensor.close()
-            attentionMaskTensor.close()
-            tokenTypeIdsTensor.close()
-            output.close()
-
             // 4. Process BIO tags and Aggregate with real text slices
             val aggregated = aggregateTokens(text, nerTokens, threshold)
             results.addAll(aggregated)
 
         } catch (e: Exception) {
             e.printStackTrace()
+        } finally {
+            inputIdsTensor?.close()
+            attentionMaskTensor?.close()
+            tokenTypeIdsTensor?.close()
+            output?.close()
         }
 
         return results
@@ -149,10 +154,16 @@ class AiDetector(private val context: Context) {
         }
         currentEntity?.let { aggregated.add(it.toResult(text)) }
 
-        // Deduplicate by threat type (keeping longest)
+        // Deduplicate overlapping / subsumed matches without dropping distinct entities
         return aggregated
-            .groupBy { it.threatType }
-            .map { entry -> entry.value.maxByOrNull { it.matchedText.length }!! }
+            .distinctBy { "${it.threatType}-${it.startIndex}-${it.endIndex}" }
+            .filter { r1 ->
+                aggregated.none { r2 ->
+                    r2 !== r1 && r2.threatType == r1.threatType &&
+                    r2.startIndex <= r1.startIndex && r2.endIndex >= r1.endIndex &&
+                    (r2.endIndex - r2.startIndex) > (r1.endIndex - r1.startIndex)
+                }
+            }
     }
 
     private data class NerToken(val entity: String, val word: String, val score: Float, val start: Int, val end: Int)

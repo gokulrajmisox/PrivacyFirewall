@@ -4,7 +4,7 @@ import android.content.Context
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-class PrivacyFirewallEngine(private val context: Context) {
+class PrivacyFirewallEngine(context: Context) {
     
     private val regexDetector = RegexDetector()
     val aiDetector = AiDetector(context)
@@ -30,15 +30,21 @@ class PrivacyFirewallEngine(private val context: Context) {
     fun redactText(text: String, threats: List<RegexDetector.DetectionResult>): String {
         if (threats.isEmpty() || text.isEmpty()) return text
 
-        // Sort threats in ascending order of start index
+        // Sort threats in ascending order of start index, then descending order of end index
         val sorted = threats.filter { it.startIndex in 0..text.length && it.endIndex in it.startIndex..text.length }
-            .sortedBy { it.startIndex }
+            .sortedWith(compareBy({ it.startIndex }, { -it.endIndex }))
 
         val sb = StringBuilder()
         var lastIndex = 0
 
         for (threat in sorted) {
-            if (threat.startIndex < lastIndex) continue // Skip overlapping fragments
+            if (threat.startIndex < lastIndex) {
+                if (threat.endIndex > lastIndex) {
+                    sb.append("[REDACTED: ${threat.threatType.name}]")
+                    lastIndex = threat.endIndex
+                }
+                continue
+            }
             if (threat.startIndex > lastIndex) {
                 sb.append(text.substring(lastIndex, threat.startIndex))
             }
@@ -51,5 +57,9 @@ class PrivacyFirewallEngine(private val context: Context) {
         }
 
         return sb.toString()
+    }
+
+    fun close() {
+        aiDetector.close()
     }
 }

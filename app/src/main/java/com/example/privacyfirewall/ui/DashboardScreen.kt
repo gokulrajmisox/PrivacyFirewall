@@ -105,7 +105,7 @@ fun DashboardScreen(onNavigateToSettings: () -> Unit) {
                         count = threatsBlocked.toString(),
                         label = "Threats Blocked"
                     )
-                    Divider(
+                    VerticalDivider(
                         modifier = Modifier
                             .height(40.dp)
                             .width(1.dp),
@@ -150,6 +150,8 @@ fun DashboardScreen(onNavigateToSettings: () -> Unit) {
 
         Spacer(modifier = Modifier.height(24.dp))
 
+        var analysisJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
+
         // Interactive Sandbox for Judges
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -173,7 +175,8 @@ fun DashboardScreen(onNavigateToSettings: () -> Unit) {
                     value = testInputText,
                     onValueChange = {
                         testInputText = it
-                        coroutineScope.launch {
+                        analysisJob?.cancel()
+                        analysisJob = coroutineScope.launch {
                             isAnalyzing = true
                             detectedThreats = engine.analyzeText(it)
                             isAnalyzing = false
