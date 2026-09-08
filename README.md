@@ -211,30 +211,16 @@ PrivacyFirewall/
 
 ---
 
-## 🎬 Three-Minute Judging Demo
+## 🎬 Demo
 
-Use this sequence rather than opening the app without context:
+1. Open PrivacyFirewall and confirm that the local engines are ready.
+2. Enter synthetic PII and a fake API key in the Live Detection Sandbox.
+3. Review the real-time warning and tap **REDACT**.
+4. Confirm that the original sensitive values have been replaced with redaction markers.
+5. Repeat the test in airplane mode to demonstrate local processing.
+6. Enable the Privacy Keyboard and use the same flow in another Android app.
 
-1. **State the problem:** “People paste API keys, PII, and private names into AI and messaging apps without noticing.”
-2. **Show the app:** Open the dashboard and confirm that the local rule engine and AI model are loaded.
-3. **Show a realistic prompt:** Type a fake API key, email address, phone number, and person name into the Privacy Keyboard.
-4. **Show prevention:** Point out the real-time warning before pressing Send, then tap **Redact**.
-5. **Show the result:** Confirm that the outgoing text contains redaction markers instead of the original sensitive values.
-6. **Prove privacy:** Turn on airplane mode and repeat the test. Explain that the detector continues working locally.
-7. **Close with impact:** “PrivacyFirewall adds a last-mile privacy layer to every app that accepts text.”
-
-Record this flow and test the APK on the loaner iQOO phone before presenting.
-
-## ✅ Pre-Judging Verification Checklist
-
-- [ ] The APK installs on the target iQOO phone.
-- [ ] The dashboard reports that the real AI model is loaded.
-- [ ] Regex detection works with Wi-Fi and mobile data disabled.
-- [ ] NER detection identifies at least one person, organization, or location.
-- [ ] Redaction removes the original sensitive text from the outgoing content.
-- [ ] The keyboard remains responsive while scanning longer text.
-- [ ] The team can explain the phone-first and Office Kit workflow in one sentence.
-- [ ] The final demo is rehearsed to fit the official 3–5 minute pitch window and shows the complete flow.
+Use only synthetic credentials and personal information when testing. See [`SUBMISSION.md`](SUBMISSION.md) for the detailed judging pitch and verification checklist.
 
 ## 🎮 How to Test
 
