@@ -17,7 +17,7 @@
 
 **[Read the judge-facing submission guide](SUBMISSION.md)**
 
-> Before judging, verify that this APK contains the real ONNX model and that the dashboard reports **AI model loaded**. A Git LFS pointer is not a model file.
+> The full ONNX model is included through Git LFS. Run `git lfs pull` after cloning so the APK and local build include the approximately 106 MB model asset.
 
 ---
 
@@ -109,7 +109,7 @@ Modern mobile workflows increasingly involve interacting with large language mod
   - **Deep Semantic Entities:** Detects `PERSON`, `ORGANIZATION`, and `LOCATION` names via on-device BERT Token Classification.
 - ⌨️ **Native Keyboard Integration:** Leverages Android's `InputMethodService` combined with modern `ComposeView` integration, enabling universal protection across all third-party apps without fragile accessibility hooks.
 - ⚙️ **Customizable Sensitivity:** Configurable thresholds, toggleable scanning categories, and local preferences backed by Jetpack DataStore.
-- 🪶 **Engineered for Mobile:** Quantized INT8 weights (~40MB) and lightweight memory footprint, optimized to avoid GC pauses during typing.
+  - 🪶 **Engineered for Mobile:** Quantized INT8 weights (approximately 106 MB in the repository) with debounced inference to keep typing responsive.
 
 ---
 
@@ -120,7 +120,7 @@ Modern mobile workflows increasingly involve interacting with large language mod
 | **Language** | Kotlin 2.x | Modern, null-safe, coroutine-native language |
 | **UI Layer** | Jetpack Compose + Material 3 | Declarative, dynamic reactive UI for settings & keyboard overlay |
 | **Inference Runtime** | ONNX Runtime Mobile (`1.18.0`) | Cross-platform, hardware-accelerated on-device ML engine |
-| **Model Weights** | `bert-base-NER-uncased` (Quantized INT8) | Standard 4-class NER model optimized for sub-100ms inference |
+  | **Model Weights** | `bert-base-NER-uncased` (Quantized INT8) | Local BERT token-classification model for semantic entity detection |
 | **Tokenization** | Custom `BertTokenizer.kt` | Pure-Kotlin WordPiece implementation; zero fragile JNI dependencies |
 | **Preferences** | AndroidX DataStore Preferences | Asynchronous, transactional configuration storage |
 | **Build System** | Gradle 9.x + Android Gradle Plugin 9.x | Modern Android build tooling |
@@ -189,7 +189,7 @@ PrivacyFirewall/
 
 3. **Verify Asset Files:**
    Ensure both neural assets exist in `app/src/main/assets/`:
-   - `model_quantized.onnx` — the actual binary model, not a 134-byte Git LFS pointer
+   - `model_quantized.onnx` — the full binary model, downloaded through Git LFS
    - `vocab.txt`
 
    If Git LFS is configured for this clone, run:
@@ -200,7 +200,7 @@ PrivacyFirewall/
    file app/src/main/assets/model_quantized.onnx
    ```
 
-   The model must be substantially larger than a few bytes and must not be reported as ASCII text.
+   The expected model size is approximately 106 MB and it should be reported as binary data, not ASCII text.
 
 4. **Build & Run:**
    - Select your target device/emulator from the toolbar.

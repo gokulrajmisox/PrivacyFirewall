@@ -51,7 +51,7 @@ Use only fake credentials and synthetic personal information in the demonstratio
 
 ## Repository setup
 
-The neural model is stored through **Git LFS**. A normal Git checkout may initially show a small pointer file. Judges should install Git LFS and pull the binary before building:
+The full neural model is stored through **Git LFS**. Judges should install Git LFS and pull the binary before building:
 
 ```bash
 git lfs install
@@ -59,7 +59,7 @@ git lfs pull
 ls -lh app/src/main/assets/model_quantized.onnx
 ```
 
-The model should be approximately 106 MB and reported as binary data, not ASCII text. The vocabulary file is stored directly in the repository.
+The model is approximately 106 MB and should be reported as binary data, not ASCII text. The vocabulary file is stored directly in the repository.
 
 Build requirements:
 
@@ -74,7 +74,7 @@ Build command:
 ./gradlew test assembleDebug
 ```
 
-## Three-minute pitch structure
+## Pitch structure
 
 **0:00–0:30 — Problem.** Users paste production-like secrets, PII, and private names into AI tools and messaging applications without realizing that the data may leave the device.
 
@@ -113,7 +113,7 @@ Do not claim Snapdragon NPU acceleration, Office Kit integration, or measured la
 
 ## License status
 
-The repository advertises an MIT badge. Add or verify a `LICENSE` file before submission, and confirm that the third-party model terms permit redistribution with the APK.
+The repository includes an MIT `LICENSE` file. Confirm that the third-party model terms permit redistribution with the APK before distributing it outside the hackathon.
 
 ## Final pre-submission action
 
