@@ -15,6 +15,8 @@
 ### 📥 Download Demo APK
 **[Download the Hackathon Demo APK](https://drive.google.com/file/d/1Amfnf3JzGKEElA3oOVwUAUe-9Yv4t4Fn/view?usp=sharing)**
 
+**[Read the judge-facing submission guide](SUBMISSION.md)**
+
 > Before judging, verify that this APK contains the real ONNX model and that the dashboard reports **AI model loaded**. A Git LFS pointer is not a model file.
 
 ---

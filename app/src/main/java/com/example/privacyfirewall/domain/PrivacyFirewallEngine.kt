@@ -22,7 +22,7 @@ class PrivacyFirewallEngine(context: Context) {
             // 2. Run AI NER detection
             results.addAll(aiDetector.detect(text))
             
-            // Deduplicate overlapping results
+            // Deduplicate overlapping results before rendering warnings or redacting text.
             results.distinctBy { "${it.startIndex}-${it.endIndex}-${it.threatType}" }
         }
     }
