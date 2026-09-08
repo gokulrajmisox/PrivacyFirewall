@@ -10,6 +10,21 @@ PrivacyFirewall is submitted as an **Open Innovation / Developer Tools** project
 
 The system combines deterministic detection for structured secrets and personal data with an on-device BERT NER model for names, organizations, and locations. The user can review the warning and replace detected values with explicit redaction markers before sending.
 
+## Official judging rubric coverage
+
+The iQOO Hackathon 2026 rubric is **75% jury scoring and 25% HackTracker device data**. Prepare evidence for every category:
+
+| Criterion | Weight | Submission evidence |
+|---|---:|---|
+| End product quality | 30% | Working APK, model-ready dashboard, live detection, and successful redaction in the sandbox and a second app. |
+| Novelty and impact | 20% | Explain why keyboard-layer prevention protects users before data reaches AI or messaging services and avoids app-specific integrations. |
+| Creative phone use | 15% | Run local inference and text scanning on the iQOO phone. Show offline operation. Claim NPU acceleration only if verified on-device. |
+| Technical depth | 15% | Explain Kotlin architecture, ONNX Runtime Mobile, tokenizer, BIO parsing, offsets, debounce, error handling, and DataStore metrics. |
+| Office Kit usage | 10% | Use Office Kit during the event's phone-first workflow. The score comes from HackTracker telemetry, so usage must be real rather than merely described. |
+| Demo and presentation | 10% | Give a clear **3–5 minute** final pitch with the demo running on the iQOO phone. |
+
+The event uses Red Light and Green Light phases: approximately 55% phone-only through Office Kit and 45% with both devices. Two evaluation rounds feed the Top 10 per bucket; final pitches determine winners, and the city battle advances the Top 6 teams.
+
 ## Fastest demo path
 
 1. Install the demo APK on the iQOO phone.
@@ -71,6 +86,8 @@ Build command:
 
 **2:45–3:00 — Impact.** PrivacyFirewall adds a last-mile privacy control to any Android application that accepts text, without requiring the target application to integrate a new SDK.
 
+The official final-pitch window is **3–5 minutes**. Keep the live version below five minutes and use any remaining time for judge questions.
+
 ## Submission checklist
 
 - [ ] Git LFS model is present and approximately 106 MB.
@@ -81,7 +98,7 @@ Build command:
 - [ ] Redaction removes the original values.
 - [ ] Privacy Keyboard works in a second app.
 - [ ] Demo uses only synthetic secrets and personal information.
-- [ ] Screen recording is under three minutes.
+- [ ] The final pitch is rehearsed to fit the official 3–5 minute window.
 - [ ] Team can explain the phone-first and Office Kit workflow truthfully.
 
 ## Important submission note

@@ -21,6 +21,35 @@
 
 ---
 
+## 🏆 iQOO Hackathon 2026 — Judging Alignment
+
+PrivacyFirewall is positioned for the **Open Innovation** and **Developer Tools** tracks. The project is designed around the event's phone-first workflow and should be demonstrated on the loaner iQOO phone. The official rubric combines **75% jury scoring** with **25% HackTracker device data**.
+
+| Official criterion | Weight | What PrivacyFirewall demonstrates | Evidence to show judges |
+|---|---:|---|---|
+| **End product quality** | **30%** | A usable Android app, live detection, warning state, and one-tap redaction | Install the APK, run the sandbox, then use the Privacy Keyboard in a second app |
+| **Novelty and impact** | **20%** | A last-mile privacy layer that protects text before it reaches AI and messaging apps | Explain the user problem, who benefits, and why keyboard-layer protection avoids app-by-app integrations |
+| **Creative phone use** | **15%** | On-device AI inference and real-time mobile text scanning | Demonstrate the model loaded on the iQOO phone and repeat the test offline; do not claim NPU acceleration unless measured |
+| **Technical depth** | **15%** | Kotlin architecture, ONNX Runtime Mobile, WordPiece tokenization, BIO NER parsing, character offsets, debounce handling, and DataStore metrics | Walk through the architecture and show the model status, responsive keyboard, redaction, and tests |
+| **Office Kit usage** | **10%** | Phone-first development and phone/laptop bridge are supported as an event workflow | Use Office Kit during the event and show the phone remaining in the loop; this score is based on HackTracker data, not a README claim |
+| **Demo and presentation** | **10%** | A focused problem-to-proof narrative | Deliver a compelling **3–5 minute** live pitch and demo on the iQOO phone |
+
+### Event-format requirements to remember
+
+- The build is **phone-first**: during Red Light, the iQOO phone is the primary build device through Office Kit; during Green Light, both phone and laptop may be used.
+- The official schedule describes approximately **55% Red Light / phone-only** and **45% Green Light / both devices** during the build window.
+- Office Kit connects the phone and laptop for screen mirroring, clipboard, files, and remote control. Its usage is scored from HackTracker telemetry.
+- Two scored evaluation rounds feed the **Top 10** per bucket; the final live pitch determines winners. The city battle advances **Top 6** teams, with three student and three working-professional teams.
+- The final demonstration should be on the **iQOO phone**, with synthetic secrets and personal data only.
+
+### Claims we will and will not make
+
+**Defensible claims:** on-device inference, offline detection after the model is loaded, keyboard-layer interception, local NER, and one-tap redaction.
+
+**Do not claim without device evidence:** Snapdragon NPU acceleration, measured latency, Office Kit integration inside the product, or zero false positives.
+
+---
+
 ## 📌 Executive Summary
 
 Modern mobile workflows increasingly involve interacting with large language models (ChatGPT, Claude, Copilot, Gemini) and collaborative messaging apps. Users routinely copy-paste snippets containing proprietary tokens, client names, locations, API keys, or financial identifiers into prompts without realizing the data governance risk.
@@ -205,7 +234,7 @@ Record this flow and test the APK on the loaner iQOO phone before presenting.
 - [ ] Redaction removes the original sensitive text from the outgoing content.
 - [ ] The keyboard remains responsive while scanning longer text.
 - [ ] The team can explain the phone-first and Office Kit workflow in one sentence.
-- [ ] The demo video is less than three minutes and shows the complete flow.
+- [ ] The final demo is rehearsed to fit the official 3–5 minute pitch window and shows the complete flow.
 
 ## 🎮 How to Test
 
