@@ -13,7 +13,9 @@
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 ### 📥 Download Demo APK
-**[Click here to download the Hackathon Demo APK](https://drive.google.com/file/d/1Amfnf3JzGKEElA3oOVwUAUe-9Yv4t4Fn/view?usp=sharing)** 
+**[Download the Hackathon Demo APK](https://drive.google.com/file/d/1Amfnf3JzGKEElA3oOVwUAUe-9Yv4t4Fn/view?usp=sharing)**
+
+> Before judging, verify that this APK contains the real ONNX model and that the dashboard reports **AI model loaded**. A Git LFS pointer is not a model file.
 
 ---
 
@@ -25,7 +27,7 @@ Modern mobile workflows increasingly involve interacting with large language mod
 1. **Deterministic Rule Engine:** Sub-millisecond Regex pattern matching for structured secrets (API keys, SSNs, credit cards, emails, phone numbers).
 2. **Neural NER Engine:** Quantized BERT Named Entity Recognition model (`Xenova/bert-base-NER-uncased`) executed natively via **ONNX Runtime Mobile**, powered by a custom pure-Kotlin **WordPiece Tokenizer** (zero heavy C++ wrappers, crash-resilient).
 
-**Result:** 100% offline detection, zero cloud inference, zero network exfiltration.
+**Result:** when the bundled model is loaded, detection and redaction run locally with zero cloud inference. Verify offline operation on the target phone before judging.
 
 ---
 
@@ -145,7 +147,7 @@ PrivacyFirewall/
 
 1. **Clone the Repository:**
    ```bash
-   git clone https://github.com/your-username/PrivacyFirewall.git
+   git clone https://github.com/gokulrajmisox/PrivacyFirewall.git
    cd PrivacyFirewall
    ```
 
@@ -156,8 +158,18 @@ PrivacyFirewall/
 
 3. **Verify Asset Files:**
    Ensure both neural assets exist in `app/src/main/assets/`:
-   - `model_quantized.onnx`
+   - `model_quantized.onnx` — the actual binary model, not a 134-byte Git LFS pointer
    - `vocab.txt`
+
+   If Git LFS is configured for this clone, run:
+   ```bash
+   git lfs install
+   git lfs pull
+   ls -lh app/src/main/assets/model_quantized.onnx
+   file app/src/main/assets/model_quantized.onnx
+   ```
+
+   The model must be substantially larger than a few bytes and must not be reported as ASCII text.
 
 4. **Build & Run:**
    - Select your target device/emulator from the toolbar.
@@ -167,6 +179,31 @@ PrivacyFirewall/
      ```
 
 ---
+
+## 🎬 Three-Minute Judging Demo
+
+Use this sequence rather than opening the app without context:
+
+1. **State the problem:** “People paste API keys, PII, and private names into AI and messaging apps without noticing.”
+2. **Show the app:** Open the dashboard and confirm that the local rule engine and AI model are loaded.
+3. **Show a realistic prompt:** Type a fake API key, email address, phone number, and person name into the Privacy Keyboard.
+4. **Show prevention:** Point out the real-time warning before pressing Send, then tap **Redact**.
+5. **Show the result:** Confirm that the outgoing text contains redaction markers instead of the original sensitive values.
+6. **Prove privacy:** Turn on airplane mode and repeat the test. Explain that the detector continues working locally.
+7. **Close with impact:** “PrivacyFirewall adds a last-mile privacy layer to every app that accepts text.”
+
+Record this flow and test the APK on the loaner iQOO phone before presenting.
+
+## ✅ Pre-Judging Verification Checklist
+
+- [ ] The APK installs on the target iQOO phone.
+- [ ] The dashboard reports that the real AI model is loaded.
+- [ ] Regex detection works with Wi-Fi and mobile data disabled.
+- [ ] NER detection identifies at least one person, organization, or location.
+- [ ] Redaction removes the original sensitive text from the outgoing content.
+- [ ] The keyboard remains responsive while scanning longer text.
+- [ ] The team can explain the phone-first and Office Kit workflow in one sentence.
+- [ ] The demo video is less than three minutes and shows the complete flow.
 
 ## 🎮 How to Test
 
@@ -185,6 +222,7 @@ PrivacyFirewall/
      - 🔴 `API_KEY`
      - 🔴 `SSN`
      - 🟡 `PERSON (Alice Smith)`
+   - Tap **Redact** to replace detected values before sending.
    - The user is alerted before pressing send or transmitting data to cloud APIs.
 
 ---
@@ -206,7 +244,7 @@ PrivacyFirewall/
 - [x] On-device BERT NER inference via ONNX Runtime Mobile.
 - [x] Pure-Kotlin zero-dependency WordPiece Tokenizer.
 - [x] Jetpack Compose Privacy Keyboard with inline alert strip.
-- [ ] **One-Tap Synthetic Masking:** Replace sensitive tokens with realistic synthetic placeholders (e.g., `sk-live-***` or `[REDACTED]`).
+- [x] **One-Tap Redaction:** Replace detected sensitive tokens with markers such as `[REDACTED: API_KEY]`.
 - [ ] **Optional Accessibility Service:** Passive background scanning for users who prefer keeping Gboard or SwiftKey.
 - [ ] **Custom Regex Manager:** Allow security teams to inject custom internal token regexes via JSON import.
 
@@ -214,7 +252,7 @@ PrivacyFirewall/
 
 ## 🤝 Contributing
 
-Contributions, issues, and feature requests are welcome! Feel free to check out the [issues page](https://github.com/your-username/PrivacyFirewall/issues).
+Contributions, issues, and feature requests are welcome! Feel free to check out the [issues page](https://github.com/gokulrajmisox/PrivacyFirewall/issues).
 
 1. Fork the Project
 2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
