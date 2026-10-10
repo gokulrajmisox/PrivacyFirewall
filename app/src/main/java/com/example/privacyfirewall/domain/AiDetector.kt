@@ -5,13 +5,34 @@ import ai.onnxruntime.OnnxTensor
 import ai.onnxruntime.OrtEnvironment
 import ai.onnxruntime.OrtSession
 import java.nio.LongBuffer
+import android.util.Log
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 
 class AiDetector(context: Context) {
 
+    /** Lifecycle of the on-device model. Observed by the keyboard UI to show a loading state. */
+    enum class ModelState { UNINITIALIZED, LOADING, READY, FAILED }
+
+    // Keep only the application context to avoid leaking the IME service.
+    private val appContext: Context = context.applicationContext
+
     private val ortEnv: OrtEnvironment = OrtEnvironment.getEnvironment()
+
     private var ortSession: OrtSession? = null
-    var isModelLoaded: Boolean = false
-        private set
+
+    private val _modelState = MutableStateFlow(ModelState.UNINITIALIZED)
+    val modelState: StateFlow<ModelState> = _modelState
+
+    /** Thread-safe read of the model's readiness. */
+    val isModelLoaded: Boolean
+        get() = _modelState.value == ModelState.READY
+
+    private val initMutex = Mutex()
 
     // For Xenova/bert-base-NER-uncased, the output labels are typically:
     // 0: O, 1: B-MISC, 2: I-MISC, 3: B-PER, 4: I-PER, 5: B-ORG, 6: I-ORG, 7: B-LOC, 8: I-LOC
@@ -24,15 +45,29 @@ class AiDetector(context: Context) {
 
     private lateinit var tokenizer: BertTokenizer
 
-    init {
-        try {
-            val modelBytes = context.assets.open("model_quantized.onnx").readBytes()
-            ortSession = ortEnv.createSession(modelBytes, OrtSession.SessionOptions())
-            tokenizer = BertTokenizer(context)
-            isModelLoaded = true
-        } catch (e: Exception) {
-            e.printStackTrace()
-            isModelLoaded = false
+    /**
+     * Loads the 106 MB ONNX model and tokenizer on Dispatchers.IO.
+     * Safe to call multiple times; the model is loaded exactly once.
+     * Until this completes, [detect] returns an empty list and only the regex engine is active.
+     */
+    suspend fun initialize() {
+        initMutex.withLock {
+            if (_modelState.value != ModelState.UNINITIALIZED) return
+            _modelState.value = ModelState.LOADING
+            try {
+                // Asset I/O + native session init must never run on the main thread.
+                val modelBytes = withContext(Dispatchers.IO) {
+                    appContext.assets.open("model_quantized.onnx").readBytes()
+                }
+                ortSession = withContext(Dispatchers.IO) {
+                    ortEnv.createSession(modelBytes, OrtSession.SessionOptions())
+                }
+                withContext(Dispatchers.IO) { tokenizer = BertTokenizer(appContext) }
+                _modelState.value = ModelState.READY
+            } catch (e: Exception) {
+                Log.e("AiDetector", "Failed to initialize ONNX model", e)
+                _modelState.value = ModelState.FAILED
+            }
         }
     }
 
