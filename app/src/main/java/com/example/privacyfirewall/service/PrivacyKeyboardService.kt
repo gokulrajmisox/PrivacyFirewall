@@ -27,6 +27,7 @@ import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import com.example.privacyfirewall.data.SettingsRepository
+import com.example.privacyfirewall.domain.AiDetector
 import com.example.privacyfirewall.domain.PrivacyFirewallEngine
 import com.example.privacyfirewall.domain.RegexDetector
 import kotlinx.coroutines.CoroutineScope
@@ -58,6 +59,24 @@ class PrivacyKeyboardService : InputMethodService(), LifecycleOwner, ViewModelSt
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
         firewallEngine = PrivacyFirewallEngine(this)
         settingsRepository = SettingsRepository(this)
+
+        // Heavy 106 MB ONNX model load moved off the main thread (ANR fix).
+        serviceScope.launch(Dispatchers.IO) { firewallEngine.initialize() }
+
+        // Surface the model loading state in the keyboard UI.
+        serviceScope.launch {
+            firewallEngine.modelState.collect { state ->
+                when (state) {
+                    AiDetector.ModelState.LOADING ->
+                        statusMessageState.value = "⏳ Loading AI privacy model…"
+                    AiDetector.ModelState.FAILED ->
+                        statusMessageState.value = "⚠️ AI model unavailable — regex protection still active"
+                    AiDetector.ModelState.READY ->
+                        if (statusMessageState.value == "⏳ Loading AI privacy model…") statusMessageState.value = null
+                    AiDetector.ModelState.UNINITIALIZED -> Unit
+                }
+            }
+        }
     }
 
     override fun onCreateInputView(): View {
