@@ -2,6 +2,7 @@ package com.example.privacyfirewall.domain
 
 import android.content.Context
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.withContext
 
 class PrivacyFirewallEngine(context: Context) {
@@ -9,8 +10,16 @@ class PrivacyFirewallEngine(context: Context) {
     private val regexDetector = RegexDetector()
     val aiDetector = AiDetector(context)
 
+    val modelState: StateFlow<AiDetector.ModelState>
+        get() = aiDetector.modelState
+
     val isModelReady: Boolean
         get() = aiDetector.isModelLoaded
+
+    /** Loads the ONNX model off the main thread. Call once from a background coroutine. */
+    suspend fun initialize() {
+        aiDetector.initialize()
+    }
 
     suspend fun analyzeText(text: String): List<RegexDetector.DetectionResult> {
         return withContext(Dispatchers.Default) {
